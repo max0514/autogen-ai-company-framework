@@ -1,0 +1,1773 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>AI 狼人殺 2026</title>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Noto+Sans+TC:wght@300;400;500;700;900&display=swap');
+
+  :root {
+    --bg-dark: #0a0a1a;
+    --bg-card: #12122a;
+    --bg-card-hover: #1a1a3a;
+    --accent-red: #e74c3c;
+    --accent-blue: #3498db;
+    --accent-gold: #f1c40f;
+    --accent-green: #2ecc71;
+    --accent-purple: #9b59b6;
+    --accent-orange: #e67e22;
+    --text-primary: #ecf0f1;
+    --text-secondary: #95a5a6;
+    --wolf-red: #c0392b;
+    --seer-blue: #2980b9;
+    --witch-purple: #8e44ad;
+    --villager-green: #27ae60;
+    --night-bg: #05051a;
+    --day-bg: #1a1520;
+  }
+
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+
+  body {
+    font-family: 'Noto Sans TC', sans-serif;
+    background: var(--bg-dark);
+    color: var(--text-primary);
+    min-height: 100vh;
+    overflow-x: hidden;
+  }
+
+  /* ===== SETUP SCREEN ===== */
+  #setup-screen {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    min-height: 100vh;
+    padding: 40px 20px;
+    background: radial-gradient(ellipse at center, #1a1a3a 0%, #0a0a1a 70%);
+  }
+
+  .setup-title {
+    font-size: 3rem;
+    font-weight: 900;
+    background: linear-gradient(135deg, var(--accent-red), var(--accent-gold));
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    margin-bottom: 8px;
+    text-align: center;
+  }
+
+  .setup-subtitle {
+    color: var(--text-secondary);
+    font-size: 1.1rem;
+    margin-bottom: 40px;
+    text-align: center;
+  }
+
+  .setup-container {
+    width: 100%;
+    max-width: 800px;
+    background: var(--bg-card);
+    border-radius: 20px;
+    padding: 40px;
+    border: 1px solid rgba(255,255,255,0.05);
+    box-shadow: 0 20px 60px rgba(0,0,0,0.5);
+  }
+
+  .setup-container h3 {
+    font-size: 1.3rem;
+    margin-bottom: 20px;
+    color: var(--accent-gold);
+  }
+
+  .player-inputs {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+    margin-bottom: 30px;
+  }
+
+  .player-row {
+    display: flex;
+    gap: 12px;
+    align-items: center;
+  }
+
+  .player-row label {
+    min-width: 30px;
+    font-weight: 700;
+    color: var(--accent-blue);
+  }
+
+  .player-row input {
+    flex: 1;
+    padding: 12px 16px;
+    background: rgba(255,255,255,0.05);
+    border: 1px solid rgba(255,255,255,0.1);
+    border-radius: 10px;
+    color: var(--text-primary);
+    font-size: 0.95rem;
+    font-family: inherit;
+    transition: all 0.3s;
+  }
+
+  .player-row input:focus {
+    outline: none;
+    border-color: var(--accent-blue);
+    box-shadow: 0 0 15px rgba(52,152,219,0.2);
+  }
+
+  .player-row input::placeholder { color: rgba(255,255,255,0.25); }
+
+  .player-count-control {
+    display: flex;
+    gap: 12px;
+    margin-bottom: 24px;
+    align-items: center;
+  }
+
+  .player-count-control span { color: var(--text-secondary); font-size: 0.9rem; }
+
+  .btn {
+    padding: 12px 28px;
+    border: none;
+    border-radius: 12px;
+    font-family: inherit;
+    font-size: 1rem;
+    font-weight: 700;
+    cursor: pointer;
+    transition: all 0.3s;
+  }
+
+  .btn-small {
+    padding: 8px 16px;
+    font-size: 0.85rem;
+    border-radius: 8px;
+  }
+
+  .btn-primary {
+    background: linear-gradient(135deg, var(--accent-red), #c0392b);
+    color: white;
+    box-shadow: 0 4px 20px rgba(231,76,60,0.4);
+  }
+
+  .btn-primary:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 6px 30px rgba(231,76,60,0.6);
+  }
+
+  .btn-secondary {
+    background: rgba(255,255,255,0.1);
+    color: var(--text-primary);
+  }
+
+  .btn-secondary:hover { background: rgba(255,255,255,0.15); }
+
+  .btn-start {
+    width: 100%;
+    padding: 18px;
+    font-size: 1.3rem;
+    margin-top: 10px;
+  }
+
+  .preset-btns {
+    display: flex;
+    gap: 8px;
+    flex-wrap: wrap;
+    margin-bottom: 20px;
+  }
+
+  .preset-btns .btn {
+    font-size: 0.8rem;
+    padding: 8px 14px;
+    background: rgba(155,89,182,0.2);
+    border: 1px solid rgba(155,89,182,0.3);
+    color: var(--accent-purple);
+  }
+
+  .preset-btns .btn:hover {
+    background: rgba(155,89,182,0.3);
+  }
+
+  /* ===== GAME SCREEN ===== */
+  #game-screen {
+    display: none;
+    min-height: 100vh;
+  }
+
+  .game-header {
+    position: sticky;
+    top: 0;
+    z-index: 100;
+    background: rgba(10,10,26,0.95);
+    backdrop-filter: blur(20px);
+    border-bottom: 1px solid rgba(255,255,255,0.05);
+    padding: 12px 24px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+  }
+
+  .game-header-left {
+    display: flex;
+    align-items: center;
+    gap: 16px;
+  }
+
+  .game-header h1 {
+    font-size: 1.2rem;
+    background: linear-gradient(135deg, var(--accent-red), var(--accent-gold));
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+  }
+
+  .day-badge {
+    padding: 6px 16px;
+    border-radius: 20px;
+    font-size: 0.85rem;
+    font-weight: 700;
+  }
+
+  .day-badge.night {
+    background: rgba(52,73,94,0.5);
+    color: #85c1e9;
+    border: 1px solid rgba(133,193,233,0.3);
+  }
+
+  .day-badge.day {
+    background: rgba(241,196,15,0.15);
+    color: var(--accent-gold);
+    border: 1px solid rgba(241,196,15,0.3);
+  }
+
+  .game-layout {
+    display: flex;
+    height: calc(100vh - 60px);
+  }
+
+  /* Sidebar - Player Status */
+  .sidebar {
+    width: 280px;
+    min-width: 280px;
+    background: var(--bg-card);
+    border-right: 1px solid rgba(255,255,255,0.05);
+    overflow-y: auto;
+    padding: 20px 16px;
+  }
+
+  .sidebar h3 {
+    font-size: 0.85rem;
+    text-transform: uppercase;
+    letter-spacing: 2px;
+    color: var(--text-secondary);
+    margin-bottom: 16px;
+  }
+
+  .player-card {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding: 12px;
+    border-radius: 12px;
+    margin-bottom: 8px;
+    background: rgba(255,255,255,0.03);
+    border: 1px solid rgba(255,255,255,0.05);
+    transition: all 0.3s;
+    position: relative;
+  }
+
+  .player-card.dead {
+    opacity: 0.35;
+    filter: grayscale(0.8);
+  }
+
+  .player-card.dead::after {
+    content: '💀';
+    position: absolute;
+    right: 12px;
+    font-size: 1.2rem;
+  }
+
+  .player-card.speaking {
+    border-color: var(--accent-gold);
+    box-shadow: 0 0 20px rgba(241,196,15,0.15);
+    background: rgba(241,196,15,0.05);
+  }
+
+  .player-avatar {
+    width: 44px;
+    height: 44px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 1.4rem;
+    flex-shrink: 0;
+  }
+
+  .player-info { flex: 1; min-width: 0; }
+
+  .player-name {
+    font-weight: 700;
+    font-size: 0.9rem;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+
+  .player-trait {
+    font-size: 0.75rem;
+    color: var(--text-secondary);
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+
+  .player-role-badge {
+    font-size: 0.65rem;
+    padding: 2px 8px;
+    border-radius: 10px;
+    font-weight: 700;
+    display: none;
+  }
+
+  .show-roles .player-role-badge { display: inline-block; }
+
+  .role-wolf { background: rgba(192,57,43,0.2); color: var(--wolf-red); border: 1px solid rgba(192,57,43,0.3); }
+  .role-seer { background: rgba(41,128,185,0.2); color: var(--seer-blue); border: 1px solid rgba(41,128,185,0.3); }
+  .role-witch { background: rgba(142,68,173,0.2); color: var(--witch-purple); border: 1px solid rgba(142,68,173,0.3); }
+  .role-villager { background: rgba(39,174,96,0.2); color: var(--villager-green); border: 1px solid rgba(39,174,96,0.3); }
+
+  .sidebar-section { margin-top: 24px; }
+
+  .god-log-toggle {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    margin-top: 16px;
+    cursor: pointer;
+    color: var(--accent-gold);
+    font-size: 0.85rem;
+  }
+
+  .toggle-switch {
+    width: 40px;
+    height: 22px;
+    background: rgba(255,255,255,0.1);
+    border-radius: 11px;
+    position: relative;
+    transition: all 0.3s;
+    cursor: pointer;
+  }
+
+  .toggle-switch.active { background: var(--accent-gold); }
+
+  .toggle-switch::after {
+    content: '';
+    width: 18px;
+    height: 18px;
+    background: white;
+    border-radius: 50%;
+    position: absolute;
+    top: 2px;
+    left: 2px;
+    transition: all 0.3s;
+  }
+
+  .toggle-switch.active::after { left: 20px; }
+
+  /* Main Content Area */
+  .main-area {
+    flex: 1;
+    overflow-y: auto;
+    padding: 24px 32px;
+    scroll-behavior: smooth;
+  }
+
+  /* Phase Banners */
+  .phase-banner {
+    text-align: center;
+    padding: 40px 20px;
+    margin: 20px 0;
+    border-radius: 16px;
+    position: relative;
+    overflow: hidden;
+  }
+
+  .phase-banner.night {
+    background: linear-gradient(135deg, #0c0c2a, #1a1040);
+    border: 1px solid rgba(133,193,233,0.15);
+  }
+
+  .phase-banner.day {
+    background: linear-gradient(135deg, #2a1a0c, #40301a);
+    border: 1px solid rgba(241,196,15,0.15);
+  }
+
+  .phase-banner h2 {
+    font-size: 2rem;
+    margin-bottom: 8px;
+  }
+
+  .phase-banner p {
+    color: var(--text-secondary);
+    font-size: 0.95rem;
+  }
+
+  /* God Log (Night Actions) */
+  .god-log {
+    background: rgba(241,196,15,0.05);
+    border: 1px solid rgba(241,196,15,0.15);
+    border-radius: 12px;
+    padding: 20px;
+    margin: 16px 0;
+  }
+
+  .god-log h4 {
+    color: var(--accent-gold);
+    margin-bottom: 12px;
+    font-size: 0.9rem;
+  }
+
+  .god-log-entry {
+    display: flex;
+    align-items: flex-start;
+    gap: 10px;
+    padding: 8px 0;
+    font-size: 0.9rem;
+    border-bottom: 1px solid rgba(255,255,255,0.03);
+  }
+
+  .god-log-entry:last-child { border-bottom: none; }
+
+  .god-log-icon { font-size: 1.1rem; flex-shrink: 0; }
+
+  /* Death Announcement */
+  .death-announcement {
+    text-align: center;
+    padding: 24px;
+    margin: 16px 0;
+    background: rgba(231,76,60,0.08);
+    border: 1px solid rgba(231,76,60,0.2);
+    border-radius: 12px;
+  }
+
+  .death-announcement .death-name {
+    font-size: 1.5rem;
+    font-weight: 900;
+    color: var(--accent-red);
+    margin: 8px 0;
+  }
+
+  .safe-announcement {
+    text-align: center;
+    padding: 24px;
+    margin: 16px 0;
+    background: rgba(46,204,113,0.08);
+    border: 1px solid rgba(46,204,113,0.2);
+    border-radius: 12px;
+    color: var(--accent-green);
+  }
+
+  /* Chat Bubbles */
+  .chat-section {
+    margin: 20px 0;
+  }
+
+  .chat-section h3 {
+    font-size: 1rem;
+    color: var(--text-secondary);
+    margin-bottom: 16px;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+
+  .chat-bubble {
+    display: flex;
+    gap: 14px;
+    margin-bottom: 20px;
+    animation: fadeSlideIn 0.5s ease-out both;
+    opacity: 0;
+  }
+
+  @keyframes fadeSlideIn {
+    from { opacity: 0; transform: translateY(20px); }
+    to { opacity: 1; transform: translateY(0); }
+  }
+
+  .chat-avatar {
+    width: 48px;
+    height: 48px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 1.5rem;
+    flex-shrink: 0;
+    border: 2px solid rgba(255,255,255,0.1);
+  }
+
+  .chat-body { flex: 1; min-width: 0; }
+
+  .chat-name {
+    font-weight: 700;
+    font-size: 0.9rem;
+    margin-bottom: 6px;
+  }
+
+  .chat-text {
+    background: var(--bg-card);
+    padding: 14px 18px;
+    border-radius: 4px 16px 16px 16px;
+    line-height: 1.7;
+    font-size: 0.95rem;
+    border: 1px solid rgba(255,255,255,0.05);
+    position: relative;
+  }
+
+  .chat-text.wolf-speech { border-left: 3px solid var(--wolf-red); }
+  .chat-text.seer-speech { border-left: 3px solid var(--seer-blue); }
+  .chat-text.witch-speech { border-left: 3px solid var(--witch-purple); }
+  .chat-text.villager-speech { border-left: 3px solid var(--villager-green); }
+
+  /* Vote Section */
+  .vote-section {
+    margin: 24px 0;
+    padding: 24px;
+    background: var(--bg-card);
+    border-radius: 16px;
+    border: 1px solid rgba(255,255,255,0.05);
+  }
+
+  .vote-section h3 {
+    text-align: center;
+    margin-bottom: 20px;
+    font-size: 1.2rem;
+  }
+
+  .vote-grid {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    margin-bottom: 20px;
+  }
+
+  .vote-row {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding: 10px 16px;
+    background: rgba(255,255,255,0.03);
+    border-radius: 10px;
+    animation: fadeSlideIn 0.3s ease-out both;
+    opacity: 0;
+    flex-wrap: wrap;
+  }
+
+  .vote-arrow {
+    color: var(--accent-red);
+    font-size: 1.2rem;
+  }
+
+  .vote-result {
+    text-align: center;
+    padding: 20px;
+    border-radius: 12px;
+    font-size: 1.1rem;
+    font-weight: 700;
+  }
+
+  .vote-result.eliminated {
+    background: rgba(231,76,60,0.15);
+    border: 1px solid rgba(231,76,60,0.3);
+    color: var(--accent-red);
+  }
+
+  .vote-result.safe {
+    background: rgba(46,204,113,0.15);
+    border: 1px solid rgba(46,204,113,0.3);
+    color: var(--accent-green);
+  }
+
+  /* Last Words */
+  .last-words {
+    margin: 16px 0;
+    padding: 20px;
+    background: rgba(231,76,60,0.05);
+    border: 1px dashed rgba(231,76,60,0.3);
+    border-radius: 12px;
+    text-align: center;
+  }
+
+  .last-words .lw-title {
+    color: var(--accent-red);
+    font-weight: 700;
+    margin-bottom: 8px;
+  }
+
+  .last-words .lw-text {
+    font-style: italic;
+    color: var(--text-secondary);
+    line-height: 1.6;
+  }
+
+  /* Game Over */
+  .game-over {
+    text-align: center;
+    padding: 60px 20px;
+    margin: 40px 0;
+  }
+
+  .game-over h2 {
+    font-size: 2.5rem;
+    margin-bottom: 16px;
+  }
+
+  .game-over.good-win h2 {
+    background: linear-gradient(135deg, var(--accent-green), var(--accent-blue));
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+  }
+
+  .game-over.wolf-win h2 {
+    background: linear-gradient(135deg, var(--accent-red), var(--accent-orange));
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+  }
+
+  .game-over p { color: var(--text-secondary); font-size: 1.1rem; }
+
+  .role-reveal {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 16px;
+    justify-content: center;
+    margin-top: 30px;
+  }
+
+  .reveal-card {
+    padding: 16px 24px;
+    border-radius: 12px;
+    background: var(--bg-card);
+    border: 1px solid rgba(255,255,255,0.1);
+    text-align: center;
+    min-width: 140px;
+  }
+
+  .reveal-card .reveal-emoji { font-size: 2rem; margin-bottom: 8px; }
+  .reveal-card .reveal-name { font-weight: 700; margin-bottom: 4px; }
+  .reveal-card .reveal-role { font-size: 0.85rem; }
+
+  /* Speed control */
+  .speed-control {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+
+  .speed-control label { font-size: 0.8rem; color: var(--text-secondary); }
+
+  .speed-control select {
+    background: rgba(255,255,255,0.1);
+    border: 1px solid rgba(255,255,255,0.15);
+    color: var(--text-primary);
+    padding: 4px 8px;
+    border-radius: 6px;
+    font-family: inherit;
+    font-size: 0.8rem;
+  }
+
+  /* Continue Button */
+  .continue-area {
+    text-align: center;
+    margin: 30px 0;
+  }
+
+  /* Stars background */
+  .stars {
+    position: fixed;
+    top: 0; left: 0; right: 0; bottom: 0;
+    pointer-events: none;
+    z-index: -1;
+  }
+
+  .star {
+    position: absolute;
+    width: 2px;
+    height: 2px;
+    background: white;
+    border-radius: 50%;
+    animation: twinkle 3s infinite alternate;
+  }
+
+  @keyframes twinkle {
+    0% { opacity: 0.2; }
+    100% { opacity: 0.8; }
+  }
+
+  /* Scrollbar */
+  ::-webkit-scrollbar { width: 6px; }
+  ::-webkit-scrollbar-track { background: transparent; }
+  ::-webkit-scrollbar-thumb { background: rgba(255,255,255,0.1); border-radius: 3px; }
+  ::-webkit-scrollbar-thumb:hover { background: rgba(255,255,255,0.2); }
+
+  /* Responsive */
+  @media (max-width: 768px) {
+    .sidebar { display: none; }
+    .setup-container { padding: 24px; }
+    .setup-title { font-size: 2rem; }
+    .main-area { padding: 16px; }
+  }
+
+  .typing-indicator {
+    display: inline-flex;
+    gap: 4px;
+    padding: 8px 16px;
+  }
+  .typing-indicator span {
+    width: 8px; height: 8px;
+    background: var(--text-secondary);
+    border-radius: 50%;
+    animation: typing 1.2s infinite;
+  }
+  .typing-indicator span:nth-child(2) { animation-delay: 0.2s; }
+  .typing-indicator span:nth-child(3) { animation-delay: 0.4s; }
+  @keyframes typing {
+    0%, 60%, 100% { transform: translateY(0); opacity: 0.3; }
+    30% { transform: translateY(-6px); opacity: 1; }
+  }
+</style>
+</head>
+<body>
+
+<div class="stars" id="stars"></div>
+
+<!-- ===== SETUP SCREEN ===== -->
+<div id="setup-screen">
+  <div class="setup-title">AI 狼人殺 2026</div>
+  <div class="setup-subtitle">LLM 全自動邏輯推演 - 視覺化網頁版</div>
+
+  <div class="setup-container">
+    <h3>Google Gemini API 設定</h3>
+    <div class="player-row" style="margin-bottom:12px">
+      <label>🔑</label>
+      <input type="password" id="api-key-input" placeholder="輸入你的 Gemini API Key" style="flex:1" />
+    </div>
+    <div class="player-row" style="margin-bottom:24px">
+      <label>🤖</label>
+      <select id="model-select" style="flex:1;padding:12px 16px;background:rgba(255,255,255,0.05);border:1px solid rgba(255,255,255,0.1);border-radius:10px;color:var(--text-primary);font-size:0.95rem;font-family:inherit;">
+        <option value="gemini-3.0-pro-preview">Gemini 3.0 Pro (最新)</option>
+        <option value="gemini-2.5-pro-preview-06-05">Gemini 2.5 Pro</option>
+        <option value="gemini-2.5-flash-preview-05-20">Gemini 2.5 Flash (快速)</option>
+        <option value="gemini-2.0-flash">Gemini 2.0 Flash</option>
+      </select>
+    </div>
+
+    <h3>快速載入預設名單</h3>
+    <div class="preset-btns">
+      <button class="btn" onclick="loadPreset('politicians')">世界政治家</button>
+      <button class="btn" onclick="loadPreset('tech')">科技大佬</button>
+      <button class="btn" onclick="loadPreset('anime')">動漫角色</button>
+      <button class="btn" onclick="loadPreset('history')">歷史人物</button>
+    </div>
+
+    <h3>玩家名單與性格特徵</h3>
+    <div class="player-count-control">
+      <button class="btn btn-secondary btn-small" onclick="changePlayerCount(-1)">-</button>
+      <span id="player-count-label">7 位玩家</span>
+      <button class="btn btn-secondary btn-small" onclick="changePlayerCount(1)">+</button>
+      <span style="margin-left:8px; font-size:0.8rem; color:var(--text-secondary)">(支援 6-12 人)</span>
+    </div>
+
+    <div class="player-inputs" id="player-inputs"></div>
+
+    <button class="btn btn-primary btn-start" onclick="startGame()">
+      開始全自動狼人殺
+    </button>
+  </div>
+</div>
+
+<!-- ===== GAME SCREEN ===== -->
+<div id="game-screen">
+  <div class="game-header">
+    <div class="game-header-left">
+      <h1>AI 狼人殺</h1>
+      <div class="day-badge night" id="phase-badge">第 1 天 - 夜晚</div>
+    </div>
+    <div class="speed-control">
+      <label>播放速度：</label>
+      <select id="speed-select" onchange="updateSpeed()">
+        <option value="2000">慢速</option>
+        <option value="1000" selected>正常</option>
+        <option value="400">快速</option>
+        <option value="100">極速</option>
+      </select>
+    </div>
+  </div>
+
+  <div class="game-layout">
+    <div class="sidebar" id="sidebar">
+      <h3>存活玩家</h3>
+      <div id="player-list"></div>
+
+      <div class="sidebar-section">
+        <h3>上帝視角</h3>
+        <div class="god-log-toggle" onclick="toggleRoles()">
+          <div class="toggle-switch" id="role-toggle"></div>
+          <span>顯示隱藏身份</span>
+        </div>
+      </div>
+    </div>
+
+    <div class="main-area" id="main-area">
+      <!-- Game content rendered here -->
+    </div>
+  </div>
+</div>
+
+<script>
+// ==============================
+// GAME DATA & CONFIG
+// ==============================
+let playerCount = 7;
+let gameSpeed = 1000;
+let apiKey = '';
+let players = [];
+let roleMap = {};
+let alivePlayers = [];
+let deadPlayers = [];
+let currentDay = 0;
+let showRoles = false;
+let witchHealUsed = false;
+let witchPoisonUsed = false;
+let seerChecked = {};
+let gameRunning = false;
+let chatHistory = []; // Tracks all public speeches for LLM context
+let nightDeathLog = []; // Tracks all deaths with day info
+
+const ROLE_CONFIG = {
+  6:  { wolves: 2, seer: 1, witch: 1, villager: 2 },
+  7:  { wolves: 2, seer: 1, witch: 1, villager: 3 },
+  8:  { wolves: 2, seer: 1, witch: 1, villager: 4 },
+  9:  { wolves: 3, seer: 1, witch: 1, villager: 4 },
+  10: { wolves: 3, seer: 1, witch: 1, villager: 5 },
+  11: { wolves: 3, seer: 1, witch: 1, villager: 6 },
+  12: { wolves: 4, seer: 1, witch: 1, villager: 6 },
+};
+
+const ROLE_EMOJI = { '狼人': '🐺', '預言家': '🔮', '女巫': '🧪', '平民': '🧑‍🌾' };
+const ROLE_COLOR = { '狼人': 'var(--wolf-red)', '預言家': 'var(--seer-blue)', '女巫': 'var(--witch-purple)', '平民': 'var(--villager-green)' };
+const ROLE_CLASS = { '狼人': 'wolf', '預言家': 'seer', '女巫': 'witch', '平民': 'villager' };
+
+const AVATARS = ['😎','🤠','🧐','🤓','😏','🥸','🤩','😼','🦊','👻','🤖','🎭'];
+const AVATAR_BGS = [
+  'linear-gradient(135deg, #e74c3c, #c0392b)',
+  'linear-gradient(135deg, #3498db, #2980b9)',
+  'linear-gradient(135deg, #9b59b6, #8e44ad)',
+  'linear-gradient(135deg, #2ecc71, #27ae60)',
+  'linear-gradient(135deg, #e67e22, #d35400)',
+  'linear-gradient(135deg, #1abc9c, #16a085)',
+  'linear-gradient(135deg, #f39c12, #f1c40f)',
+  'linear-gradient(135deg, #e84393, #d63031)',
+  'linear-gradient(135deg, #00cec9, #0984e3)',
+  'linear-gradient(135deg, #fd79a8, #e17055)',
+  'linear-gradient(135deg, #a29bfe, #6c5ce7)',
+  'linear-gradient(135deg, #55efc4, #00b894)',
+];
+
+const PRESETS = {
+  politicians: [
+    { name: '川普', trait: '狂妄自大、愛甩鍋、口頭禪「tremendous」' },
+    { name: '習近平', trait: '沉穩老練、暗藏城府、講話引經據典' },
+    { name: '澤倫斯基', trait: '堅韌不拔、演員出身、善於煽動情緒' },
+    { name: '馬克宏', trait: '優雅自信、有時傲慢、愛用法式比喻' },
+    { name: '普丁', trait: '冷酷無情、極度理性、很少笑' },
+    { name: '梅克爾', trait: '冷靜沉著、邏輯嚴密、不輕易表態' },
+    { name: '蔡英文', trait: '溫和堅定、謹言慎行、善打太極' },
+  ],
+  tech: [
+    { name: '馬斯克', trait: '瘋狂冒險、語出驚人、愛用科學術語' },
+    { name: '黃仁勳', trait: '穿皮衣的AI教父、熱情洋溢、愛講GPU' },
+    { name: '貝佐斯', trait: '精明計算、笑聲魔性、數據驅動' },
+    { name: '祖克柏', trait: '機器人般冷靜、偶爾社交障礙' },
+    { name: '庫克', trait: '低調內斂、注重隱私、蘋果式委婉' },
+    { name: '比爾蓋茲', trait: '書呆子氣質、樂觀主義、愛引用數據' },
+    { name: '山姆奧特曼', trait: 'AI傳教士、深思熟慮、有時神祕' },
+  ],
+  anime: [
+    { name: '魯夫', trait: '單純直率、極度信任夥伴、一根筋' },
+    { name: '柯南', trait: '超強推理能力、冷靜分析、愛說真相只有一個' },
+    { name: 'L', trait: '怪異天才、喜歡吃甜食、打字姿勢很特別' },
+    { name: '夜神月', trait: '天才計劃者、極度自信、擅長操縱人心' },
+    { name: '鳴人', trait: '熱血笨蛋、永不放棄、口頭禪だってばよ' },
+    { name: '殺生丸', trait: '冷漠高傲、少言寡語、蔑視一切' },
+    { name: '炭治郎', trait: '善良正直、嗅覺敏銳、愛說「加油」' },
+  ],
+  history: [
+    { name: '諸葛亮', trait: '運籌帷幄、三步一計、羽扇綸巾' },
+    { name: '曹操', trait: '疑心病重、寧我負人、雄才大略' },
+    { name: '拿破崙', trait: '矮個子大野心、軍事天才、自戀' },
+    { name: '克麗奧佩脫拉', trait: '魅惑眾生、政治手腕高超' },
+    { name: '孫子', trait: '兵法大師、知己知彼、惜字如金' },
+    { name: '織田信長', trait: '破天荒、殘暴果斷、不信鬼神' },
+    { name: '武則天', trait: '鐵腕手段、心思縝密、笑裡藏刀' },
+  ]
+};
+
+// ==============================
+// GEMINI API
+// ==============================
+let GEMINI_MODEL = 'gemini-3.0-pro-preview';
+
+async function callGemini(prompt, maxTokens = 300) {
+  const url = `https://generativelanguage.googleapis.com/v1beta/models/${GEMINI_MODEL}:generateContent?key=${apiKey}`;
+  try {
+    const res = await fetch(url, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        contents: [{ parts: [{ text: prompt }] }],
+        generationConfig: {
+          temperature: 0.9,
+          maxOutputTokens: maxTokens,
+        }
+      })
+    });
+
+    if (!res.ok) {
+      const err = await res.text();
+      console.error('Gemini API error:', err);
+      // Show first API error to user
+      if (!window._apiErrorShown) {
+        window._apiErrorShown = true;
+        const errObj = JSON.parse(err).error;
+        alert(`Gemini API 錯誤 (${errObj.code}): ${errObj.message}\n\n請檢查 API Key 是否正確，或切換其他模型試試。`);
+      }
+      return null;
+    }
+
+    const data = await res.json();
+    const text = data?.candidates?.[0]?.content?.parts?.[0]?.text;
+    return text ? text.trim() : null;
+  } catch (e) {
+    console.error('Gemini API fetch error:', e);
+    return null;
+  }
+}
+
+// Build game context string for LLM — full history grouped by day
+function buildGameContext() {
+  const aliveInfo = alivePlayers.map(n => {
+    const p = getPlayer(n);
+    return `${n}（${p.trait}）`;
+  }).join('\n  ');
+  const deadInfo = deadPlayers.length > 0
+    ? deadPlayers.map(n => `${n}（${getPlayer(n).trait}）── 第${getPlayer(n).diedDay || '?'}天死亡`).join('\n  ')
+    : '無';
+
+  // Group chat history by day
+  let chatLog = '';
+  if (chatHistory.length > 0) {
+    let lastDay = 0;
+    for (const c of chatHistory) {
+      if (c.day !== lastDay) {
+        chatLog += `\n── 第 ${c.day} 天白天 ──\n`;
+        lastDay = c.day;
+      }
+      chatLog += `  ${c.name}：「${c.text}」\n`;
+    }
+  }
+
+  // Night death log
+  let deathLog = '';
+  if (nightDeathLog.length > 0) {
+    deathLog = '\n【歷史死亡紀錄】\n' + nightDeathLog.map(d => `  第${d.day}天${d.phase}：${d.name} 死亡`).join('\n');
+  }
+
+  return `【遊戲狀態】第 ${currentDay} 天，共 ${playerCount} 人局（${ROLE_CONFIG[playerCount].wolves}狼${ROLE_CONFIG[playerCount].villager}民1預言家1女巫）
+【存活玩家】(${alivePlayers.length}人)
+  ${aliveInfo}
+【已死亡】(${deadPlayers.length}人)
+  ${deadInfo}${deathLog}${chatLog ? `\n【完整發言紀錄】${chatLog}` : ''}`;
+}
+
+// ==============================
+// LLM-POWERED GAME FUNCTIONS
+// ==============================
+async function llmGenerateSpeech(name, trait, role) {
+  const gameCtx = buildGameContext();
+
+  // Build role-specific secret instruction
+  let roleInstruction = '';
+  if (role === '狼人') {
+    const wolfTeammates = alivePlayers.filter(n => n !== name && roleMap[n] === '狼人');
+    roleInstruction = `你的隱藏身份是【狼人】。${wolfTeammates.length > 0 ? `你的狼隊友是：${wolfTeammates.join('、')}。` : '你是最後一隻狼。'}你必須隱藏身份，把嫌疑甩到好人身上，保護隊友。絕對不能暴露自己是狼人。`;
+  } else if (role === '預言家') {
+    const checkedResults = Object.entries(seerChecked).map(([n]) => `${n}(${roleMap[n] === '狼人' ? '狼人' : '好人'})`).join('、');
+    roleInstruction = `你的隱藏身份是【預言家】。${checkedResults ? `你已查驗的結果：${checkedResults}。` : '你還沒有查驗結果。'}你要巧妙暗示或公開你的資訊來引導好人陣營。`;
+  } else if (role === '女巫') {
+    roleInstruction = `你的隱藏身份是【女巫】。解藥${witchHealUsed ? '已用完' : '還有'}，毒藥${witchPoisonUsed ? '已用完' : '還有'}。你要保護自己不被發現，同時幫助好人推理。`;
+  } else {
+    roleInstruction = `你的隱藏身份是【平民】。你沒有特殊能力，只能靠邏輯推理和觀察來找出狼人。`;
+  }
+
+  // Collect today's speeches so far (from players who spoke before this one)
+  const todaySpeeches = chatHistory.filter(c => c.day === currentDay).map(c => `${c.name}：「${c.text}」`).join('\n');
+
+  const prompt = `你正在參加一場非常認真的狼人殺遊戲。你必須完全沉浸在角色中進行白天發言。
+
+【你的角色資料】
+名字：${name}
+性格特徵：${trait}
+${roleInstruction}
+
+${gameCtx}
+${todaySpeeches ? `\n【今天已發言的內容】\n${todaySpeeches}` : ''}
+
+【發言要求 - 極度重要】
+1. 用第一人稱發言，150-250字
+2. 必須嚴格模仿「${name}」的真實說話風格、口頭禪、與性格
+3. 必須包含具體的邏輯推理鏈條，例如：
+   - 分析誰的發言有矛盾或可疑之處
+   - 引用之前某人說過的話來佐證你的推理
+   - 提出「如果A是狼人，那麼B的行為就說得通」這類假設推演
+   - 分析投票結果與死亡順序的邏輯關聯
+4. ${role === '狼人' ? '你是狼人，必須構建看似合理的推理來栽贓好人，同時暗中保護狼隊友。要表現得像一個認真推理的好人。' : ''}${role === '預言家' ? '你可以選擇適當時機跳出報查驗結果，或用暗示的方式引導村民。' : ''}${role === '女巫' ? '你可以根據自己的藥劑使用情況暗示一些資訊，但不要直接暴露身份。' : ''}${role === '平民' ? '你要仔細分析每個人的發言找出邏輯漏洞。' : ''}
+5. 要點名表態：明確說出你懷疑誰、信任誰、以及為什麼
+6. 只輸出角色扮演的發言內容，不要加任何標籤、前綴、括號說明或引號`;
+
+  const result = await callGemini(prompt, 500);
+  return result || `...我需要再觀察一下。`;
+}
+
+async function llmDecideVoteWithReason(voterName) {
+  const role = roleMap[voterName];
+  const p = getPlayer(voterName);
+  const others = alivePlayers.filter(n => n !== voterName);
+  const gameCtx = buildGameContext();
+
+  let roleHint = '';
+  if (role === '狼人') {
+    const teammates = others.filter(n => roleMap[n] === '狼人');
+    roleHint = `你是狼人。${teammates.length > 0 ? `隊友：${teammates.join('、')}，絕對不能投隊友。` : ''}你要投票淘汰對狼人威脅最大的好人，但理由要看起來合理。`;
+  } else if (role === '預言家') {
+    const knownWolves = others.filter(n => seerChecked[n] && roleMap[n] === '狼人');
+    roleHint = `你是預言家。${knownWolves.length > 0 ? `你確認的狼人：${knownWolves.join('、')}，優先投他們。` : '根據發言推理誰最可能是狼人。'}`;
+  } else {
+    roleHint = `你是${role}。根據白天的發言和邏輯推理，投票給你認為最可能是狼人的人。`;
+  }
+
+  const prompt = `你是「${voterName}」（性格：${p.trait}），正在狼人殺的投票環節。
+
+${roleHint}
+
+${gameCtx}
+
+可投票對象：${others.join('、')}
+
+根據今天所有人的發言內容、推理邏輯、以及歷史死亡紀錄，決定你要投誰。
+嚴格按照以下格式回覆（兩行）：
+理由：（用一句簡短的話說明為什麼投這個人）
+投票：（玩家名字）`;
+
+  const result = await callGemini(prompt, 120);
+
+  let target = null;
+  let reason = '';
+
+  if (result) {
+    // Extract reason
+    const reasonMatch = result.match(/理由[：:]\s*(.+)/);
+    if (reasonMatch) reason = reasonMatch[1].trim();
+
+    // Extract vote target
+    const voteMatch = result.match(/投票[：:]\s*(.+)/);
+    const searchText = voteMatch ? voteMatch[1] : result;
+    for (const candidate of others) {
+      if (searchText.includes(candidate)) { target = candidate; break; }
+    }
+    // If not found in vote line, search whole response
+    if (!target) {
+      for (const candidate of others) {
+        if (result.includes(candidate)) { target = candidate; break; }
+      }
+    }
+  }
+
+  // Fallback
+  if (!target) {
+    if (role === '狼人') {
+      const goodGuys = others.filter(n => roleMap[n] !== '狼人');
+      target = goodGuys[Math.floor(Math.random() * goodGuys.length)] || others[0];
+    } else {
+      target = others[Math.floor(Math.random() * others.length)];
+    }
+  }
+
+  return { target, reason };
+}
+
+async function llmGenerateLastWords(name, trait, role) {
+  const p = getPlayer(name);
+  const prompt = `你是「${name}」（性格：${trait}），在狼人殺中被投票處決了。你的真實身份是【${role}】。
+
+請用第一人稱發表遺言，30-80字。
+- 要完全符合「${name}」的性格與說話風格
+- ${role === '狼人' ? '你可以選擇嘲諷、誤導、或故作無辜' : '你可以選擇控訴冤屈、給出最後線索、或鼓勵同伴'}
+- 要有戲劇張力
+- 只輸出遺言內容，不要加前綴或引號`;
+
+  const result = await callGemini(prompt, 150);
+  return result || `...我無話可說。`;
+}
+
+async function llmWolfDecideKill(wolfNames, targets) {
+  const gameCtx = buildGameContext();
+  const wolfTraits = wolfNames.map(n => `${n}(${getPlayer(n).trait})`).join('、');
+
+  const prompt = `你是狼人殺中的狼人團隊，成員：${wolfTraits}。
+現在是夜晚，你們要決定殺誰。
+
+${gameCtx}
+
+可刺殺對象：${targets.join('、')}
+各對象的身份你不知道，但根據白天發言推測誰對你們威脅最大。
+
+請只回覆一個玩家名字，不要說任何其他的話。`;
+
+  const result = await callGemini(prompt, 30);
+  if (result) {
+    for (const t of targets) {
+      if (result.includes(t)) return t;
+    }
+  }
+  // Fallback
+  return targets[Math.floor(Math.random() * targets.length)];
+}
+
+async function llmWitchDecide(witchName, killed, canHeal, canPoison, aliveOthers) {
+  // Night 1: witch always saves (standard rule to prevent quick game over)
+  if (currentDay === 1 && killed && canHeal) {
+    return { action: 'heal' };
+  }
+
+  const p = getPlayer(witchName);
+  const gameCtx = buildGameContext();
+
+  let options = [];
+  if (killed && canHeal) options.push(`HEAL（用解藥救 ${killed}）`);
+  if (canPoison) options.push(`POISON:玩家名（用毒藥毒殺某人）`);
+  options.push('PASS（什麼都不做）');
+
+  const prompt = `你是「${witchName}」（性格：${p.trait}），在狼人殺中扮演女巫。
+現在是第 ${currentDay} 天夜晚。${killed ? `今晚 ${killed} 被狼人殺了。` : '今晚沒有人被殺。'}
+解藥：${canHeal ? '還有（全場只能用一次）' : '已用完'}
+毒藥：${canPoison ? '還有（全場只能用一次）' : '已用完'}
+
+${gameCtx}
+
+你的選項：${options.join(' / ')}
+${canPoison ? `可毒殺對象：${aliveOthers.join('、')}\n請根據白天發言推理誰最可能是狼人，再決定是否用毒。` : ''}
+
+請只回覆以下之一：HEAL、POISON:某玩家名、PASS。不要說其他的話。`;
+
+  const result = await callGemini(prompt, 50);
+  if (!result) return { action: 'pass' };
+
+  const upper = result.toUpperCase().trim();
+  if (upper.includes('HEAL') && killed && canHeal) return { action: 'heal' };
+  if (upper.includes('POISON') && canPoison) {
+    for (const t of aliveOthers) {
+      if (result.includes(t)) return { action: 'poison', target: t };
+    }
+  }
+  return { action: 'pass' };
+}
+
+async function llmSeerDecide(seerName, targets) {
+  const p = getPlayer(seerName);
+  const gameCtx = buildGameContext();
+  const prevChecks = Object.entries(seerChecked).map(([n]) => n).join('、');
+
+  const prompt = `你是「${seerName}」（性格：${p.trait}），在狼人殺中扮演預言家。
+現在是夜晚，你要選一個人查驗身份。
+${prevChecks ? `你已經查過：${prevChecks}` : '你還沒查過任何人。'}
+
+${gameCtx}
+
+可查驗對象：${targets.join('、')}
+
+請只回覆一個玩家名字，不要說任何其他的話。`;
+
+  const result = await callGemini(prompt, 30);
+  if (result) {
+    for (const t of targets) {
+      if (result.includes(t)) return t;
+    }
+  }
+  return targets[Math.floor(Math.random() * targets.length)];
+}
+
+// ==============================
+// SETUP SCREEN
+// ==============================
+function initSetup() {
+  renderPlayerInputs();
+  generateStars();
+}
+
+function renderPlayerInputs() {
+  const container = document.getElementById('player-inputs');
+  container.innerHTML = '';
+  document.getElementById('player-count-label').textContent = `${playerCount} 位玩家`;
+
+  for (let i = 0; i < playerCount; i++) {
+    const row = document.createElement('div');
+    row.className = 'player-row';
+    row.innerHTML = `
+      <label>${i + 1}.</label>
+      <input type="text" id="name-${i}" placeholder="角色名稱" />
+      <input type="text" id="trait-${i}" placeholder="性格特徵描述" />
+    `;
+    container.appendChild(row);
+  }
+}
+
+function changePlayerCount(delta) {
+  const newCount = playerCount + delta;
+  if (newCount >= 6 && newCount <= 12) {
+    playerCount = newCount;
+    renderPlayerInputs();
+  }
+}
+
+function loadPreset(key) {
+  const preset = PRESETS[key];
+  playerCount = preset.length;
+  renderPlayerInputs();
+  preset.forEach((p, i) => {
+    document.getElementById(`name-${i}`).value = p.name;
+    document.getElementById(`trait-${i}`).value = p.trait;
+  });
+}
+
+function generateStars() {
+  const container = document.getElementById('stars');
+  for (let i = 0; i < 80; i++) {
+    const star = document.createElement('div');
+    star.className = 'star';
+    star.style.left = Math.random() * 100 + '%';
+    star.style.top = Math.random() * 100 + '%';
+    star.style.animationDelay = Math.random() * 3 + 's';
+    star.style.width = star.style.height = (Math.random() * 2 + 1) + 'px';
+    container.appendChild(star);
+  }
+}
+
+// ==============================
+// GAME INITIALIZATION
+// ==============================
+function startGame() {
+  apiKey = document.getElementById('api-key-input').value.trim();
+  if (!apiKey) {
+    alert('請輸入 Gemini API Key！');
+    return;
+  }
+  GEMINI_MODEL = document.getElementById('model-select').value;
+  window._apiErrorShown = false;
+
+  players = [];
+  for (let i = 0; i < playerCount; i++) {
+    const name = document.getElementById(`name-${i}`).value.trim() || `玩家${i + 1}`;
+    const trait = document.getElementById(`trait-${i}`).value.trim() || '神祕莫測';
+    players.push({ name, trait, avatar: AVATARS[i], avatarBg: AVATAR_BGS[i], alive: true });
+  }
+
+  // Assign roles
+  const config = ROLE_CONFIG[playerCount];
+  let roles = [];
+  for (let i = 0; i < config.wolves; i++) roles.push('狼人');
+  roles.push('預言家');
+  roles.push('女巫');
+  for (let i = 0; i < config.villager; i++) roles.push('平民');
+  shuffleArray(roles);
+
+  roleMap = {};
+  players.forEach((p, i) => {
+    p.role = roles[i];
+    roleMap[p.name] = roles[i];
+  });
+
+  alivePlayers = players.map(p => p.name);
+  deadPlayers = [];
+  witchHealUsed = false;
+  witchPoisonUsed = false;
+  seerChecked = {};
+  chatHistory = [];
+  nightDeathLog = [];
+  currentDay = 0;
+  gameRunning = true;
+
+  // Switch to game screen
+  document.getElementById('setup-screen').style.display = 'none';
+  document.getElementById('game-screen').style.display = 'block';
+
+  renderSidebar();
+  showGodReport();
+}
+
+function showGodReport() {
+  const main = document.getElementById('main-area');
+  main.innerHTML = '';
+
+  const report = document.createElement('div');
+  report.className = 'god-log';
+  report.innerHTML = `
+    <h4>👁️ 上帝視角機密檔案</h4>
+    ${players.map(p => `
+      <div class="god-log-entry">
+        <span class="god-log-icon">${ROLE_EMOJI[p.role]}</span>
+        <span><strong>${p.name}</strong>（${p.trait}）→ <span style="color:${ROLE_COLOR[p.role]};font-weight:700">${p.role}</span></span>
+      </div>
+    `).join('')}
+  `;
+  main.appendChild(report);
+
+  const config = ROLE_CONFIG[playerCount];
+  const info = document.createElement('div');
+  info.style.cssText = 'text-align:center; color:var(--text-secondary); margin:20px 0; font-size:0.9rem;';
+  info.innerHTML = `板子配置：${config.wolves}狼 / 1預言家 / 1女巫 / ${config.villager}平民（${playerCount}人局）<br><span style="color:var(--accent-gold)">🤖 由 Gemini (${GEMINI_MODEL}) 驅動所有角色的思維與發言</span>`;
+  main.appendChild(info);
+
+  // Auto-start after delay
+  setTimeout(() => runGameLoop(), gameSpeed * 2);
+}
+
+// ==============================
+// GAME LOOP
+// ==============================
+async function runGameLoop() {
+  while (gameRunning) {
+    currentDay++;
+    await nightPhase();
+    if (checkWinCondition()) break;
+    await dayPhase();
+    if (checkWinCondition()) break;
+  }
+}
+
+// ==============================
+// NIGHT PHASE (LLM-powered)
+// ==============================
+async function nightPhase() {
+  const main = document.getElementById('main-area');
+  updatePhaseBadge('night');
+
+  const banner = createElement('div', 'phase-banner night');
+  banner.innerHTML = `<h2>🌙 第 ${currentDay} 天 ── 夜晚降臨</h2><p>天黑請閉眼，狼人請睜眼...</p>`;
+  main.appendChild(banner);
+  scrollToBottom();
+  await sleep(gameSpeed);
+
+  const log = createElement('div', 'god-log');
+  log.innerHTML = '<h4>📋 上帝機密日誌 ── 夜晚行動紀錄</h4>';
+  main.appendChild(log);
+
+  // Wolf kill (LLM decides target)
+  const aliveWolves = alivePlayers.filter(n => roleMap[n] === '狼人');
+  const nonWolfAlive = alivePlayers.filter(n => roleMap[n] !== '狼人');
+  let killed = null;
+
+  if (aliveWolves.length > 0 && nonWolfAlive.length > 0) {
+    addLogEntry(log, '🐺', `狼人正在商議中... <span class="typing-indicator"><span></span><span></span><span></span></span>`);
+    scrollToBottom();
+
+    killed = await llmWolfDecideKill(aliveWolves, nonWolfAlive);
+
+    // Replace typing with result
+    log.lastChild.querySelector('span:last-child').innerHTML =
+      `狼人（${aliveWolves.join('、')}）經過激烈討論，決定今晚刀殺 <strong style="color:var(--accent-red)">${killed}</strong>`;
+    await sleep(gameSpeed);
+  }
+
+  // Seer check (LLM decides who to check)
+  const aliveSeer = alivePlayers.find(n => roleMap[n] === '預言家');
+  if (aliveSeer) {
+    const checkTargets = alivePlayers.filter(n => n !== aliveSeer && !seerChecked[n]);
+    if (checkTargets.length > 0) {
+      addLogEntry(log, '🔮', `預言家正在思考查驗對象... <span class="typing-indicator"><span></span><span></span><span></span></span>`);
+      scrollToBottom();
+
+      const checked = await llmSeerDecide(aliveSeer, checkTargets);
+      seerChecked[checked] = true;
+      const isWolf = roleMap[checked] === '狼人';
+
+      log.lastChild.querySelector('span:last-child').innerHTML =
+        `預言家（${aliveSeer}）查驗了 <strong>${checked}</strong> ── 結果是：<strong style="color:${isWolf ? 'var(--accent-red)' : 'var(--accent-green)'}">${isWolf ? '狼人！' : '好人'}</strong>`;
+      await sleep(gameSpeed);
+    }
+  }
+
+  // Witch action (LLM decides)
+  const aliveWitch = alivePlayers.find(n => roleMap[n] === '女巫');
+  let witchSaved = false;
+  let witchPoisoned = null;
+
+  if (aliveWitch) {
+    const canHeal = killed && !witchHealUsed;
+    const canPoison = !witchPoisonUsed;
+
+    if (canHeal || canPoison) {
+      addLogEntry(log, '🧪', `女巫正在考慮行動... <span class="typing-indicator"><span></span><span></span><span></span></span>`);
+      scrollToBottom();
+
+      const aliveOthers = alivePlayers.filter(n => n !== aliveWitch && n !== killed);
+      const decision = await llmWitchDecide(aliveWitch, killed, canHeal, canPoison, aliveOthers);
+
+      if (decision.action === 'heal') {
+        witchHealUsed = true;
+        witchSaved = true;
+        log.lastChild.querySelector('span:last-child').innerHTML =
+          `女巫（${aliveWitch}）得知 <strong>${killed}</strong> 被殺，決定使用<strong style="color:var(--accent-green)">解藥</strong>救回！`;
+      } else if (decision.action === 'poison' && decision.target) {
+        witchPoisonUsed = true;
+        witchPoisoned = decision.target;
+        log.lastChild.querySelector('span:last-child').innerHTML =
+          `女巫（${aliveWitch}）對 <strong style="color:var(--accent-purple)">${witchPoisoned}</strong> 使用了毒藥！`;
+      } else {
+        log.lastChild.querySelector('span:last-child').innerHTML =
+          `女巫（${aliveWitch}）選擇今晚不使用任何藥劑。`;
+      }
+      await sleep(gameSpeed);
+    } else {
+      addLogEntry(log, '🧪', `女巫（${aliveWitch}）已無藥劑可用。`);
+      await sleep(gameSpeed);
+    }
+  }
+
+  // Resolve deaths
+  const nightDeaths = [];
+  if (killed && !witchSaved) nightDeaths.push(killed);
+  if (witchPoisoned) nightDeaths.push(witchPoisoned);
+
+  nightDeaths.forEach(d => {
+    if (alivePlayers.includes(d)) {
+      alivePlayers.splice(alivePlayers.indexOf(d), 1);
+      deadPlayers.push(d);
+      const p = getPlayer(d);
+      if (p) { p.alive = false; p.diedDay = currentDay; }
+      nightDeathLog.push({ day: currentDay, phase: '夜晚', name: d });
+    }
+  });
+
+  addLogEntry(log, '📝', nightDeaths.length > 0
+    ? `夜晚結算：<strong style="color:var(--accent-red)">${nightDeaths.join('、')}</strong> 死亡`
+    : '夜晚結算：<strong style="color:var(--accent-green)">平安夜，無人死亡</strong>');
+
+  renderSidebar();
+  scrollToBottom();
+  await sleep(gameSpeed);
+
+  // Death announcement
+  if (nightDeaths.length > 0) {
+    nightDeaths.forEach(d => {
+      const ann = createElement('div', 'death-announcement');
+      ann.innerHTML = `<div>昨晚，一位玩家遭到不幸...</div><div class="death-name">${d} 死亡</div><div style="color:var(--text-secondary)">身份：${roleMap[d]}</div>`;
+      main.appendChild(ann);
+    });
+  } else {
+    const safe = createElement('div', 'safe-announcement');
+    safe.innerHTML = '昨晚是平安夜，所有人安然無恙';
+    main.appendChild(safe);
+  }
+
+  scrollToBottom();
+  await sleep(gameSpeed);
+}
+
+// ==============================
+// DAY PHASE (LLM-powered)
+// ==============================
+async function dayPhase() {
+  const main = document.getElementById('main-area');
+  updatePhaseBadge('day');
+
+  const banner = createElement('div', 'phase-banner day');
+  banner.innerHTML = `<h2>☀️ 第 ${currentDay} 天 ── 白天討論</h2><p>天亮了，請各位開始自由辯論！</p>`;
+  main.appendChild(banner);
+  scrollToBottom();
+  await sleep(gameSpeed);
+
+  // Chat section
+  const chatSection = createElement('div', 'chat-section');
+  chatSection.innerHTML = '<h3>💬 自由辯論（Gemini AI 生成中...）</h3>';
+  main.appendChild(chatSection);
+
+  // Generate speeches with LLM
+  for (let i = 0; i < alivePlayers.length; i++) {
+    const name = alivePlayers[i];
+    const p = getPlayer(name);
+    setSpeaking(name);
+
+    // Show typing indicator
+    const typingBubble = createChatBubble(p, '<span class="typing-indicator"><span></span><span></span><span></span></span>', i);
+    chatSection.appendChild(typingBubble);
+    scrollToBottom();
+
+    // Call LLM
+    const speech = await llmGenerateSpeech(name, p.trait, p.role);
+    chatHistory.push({ name, text: speech, day: currentDay });
+
+    // Replace typing with actual speech
+    typingBubble.querySelector('.chat-text').textContent = speech;
+    scrollToBottom();
+    clearSpeaking();
+  }
+
+  // Update section title
+  chatSection.querySelector('h3').textContent = '💬 自由辯論';
+  await sleep(gameSpeed);
+
+  // Vote section (LLM-powered)
+  const voteSection = createElement('div', 'vote-section');
+  voteSection.innerHTML = '<h3>🗳️ 投票環節（AI 思考中...）</h3>';
+  const voteGrid = createElement('div', 'vote-grid');
+  voteSection.appendChild(voteGrid);
+  main.appendChild(voteSection);
+  scrollToBottom();
+
+  const votes = {};
+  alivePlayers.forEach(n => votes[n] = 0);
+
+  for (let i = 0; i < alivePlayers.length; i++) {
+    const voter = alivePlayers[i];
+    const voteResult = await llmDecideVoteWithReason(voter);
+
+    if (voteResult.target) {
+      votes[voteResult.target] = (votes[voteResult.target] || 0) + 1;
+      const row = createElement('div', 'vote-row');
+      row.style.animationDelay = `${i * 0.15}s`;
+      row.innerHTML = `
+        <span style="font-weight:700">${voter}</span>
+        <span class="vote-arrow">➜</span>
+        <span style="color:var(--accent-red);font-weight:700">${voteResult.target}</span>
+        ${voteResult.reason ? `<span style="color:var(--text-secondary);font-size:0.8rem;margin-left:8px">「${voteResult.reason}」</span>` : ''}
+      `;
+      voteGrid.appendChild(row);
+    }
+    scrollToBottom();
+  }
+
+  voteSection.querySelector('h3').textContent = '🗳️ 投票環節';
+  await sleep(gameSpeed);
+
+  // Tally
+  let maxVotes = 0;
+  let eliminated = null;
+  Object.entries(votes).forEach(([name, count]) => {
+    if (count > maxVotes) {
+      maxVotes = count;
+      eliminated = name;
+    }
+  });
+
+  const result = createElement('div', `vote-result ${eliminated ? 'eliminated' : 'safe'}`);
+  if (eliminated && maxVotes > 1) {
+    result.innerHTML = `🔨 ${eliminated} 以 ${maxVotes} 票被處決！`;
+    voteSection.appendChild(result);
+
+    // LLM-generated last words
+    const p = getPlayer(eliminated);
+    const lwDiv = createElement('div', 'last-words');
+    lwDiv.innerHTML = `<div class="lw-title">${eliminated} 的遺言</div><div class="lw-text"><span class="typing-indicator"><span></span><span></span><span></span></span></div>`;
+    main.appendChild(lwDiv);
+    scrollToBottom();
+
+    const lastWords = await llmGenerateLastWords(eliminated, p.trait, p.role);
+    lwDiv.querySelector('.lw-text').textContent = `"${lastWords}"`;
+
+    alivePlayers.splice(alivePlayers.indexOf(eliminated), 1);
+    deadPlayers.push(eliminated);
+    p.alive = false;
+    p.diedDay = currentDay;
+    nightDeathLog.push({ day: currentDay, phase: '白天投票', name: eliminated });
+  } else {
+    result.innerHTML = '⚖️ 票數分散，今天無人被處決';
+    voteSection.appendChild(result);
+  }
+
+  renderSidebar();
+  scrollToBottom();
+  await sleep(gameSpeed);
+}
+
+// ==============================
+// WIN CONDITION
+// ==============================
+function checkWinCondition() {
+  const wolves = alivePlayers.filter(n => roleMap[n] === '狼人').length;
+  const good = alivePlayers.length - wolves;
+
+  if (wolves === 0) { showGameOver('good'); return true; }
+  if (wolves >= good) { showGameOver('wolf'); return true; }
+  return false;
+}
+
+function showGameOver(winner) {
+  gameRunning = false;
+  const main = document.getElementById('main-area');
+
+  const div = createElement('div', `game-over ${winner === 'good' ? 'good-win' : 'wolf-win'}`);
+  div.innerHTML = `
+    <h2>${winner === 'good' ? '好人陣營勝利！' : '狼人陣營勝利！'}</h2>
+    <p>${winner === 'good' ? '所有狼人已被消滅，村莊恢復了和平' : '狼人佔領了村莊，黑暗籠罩大地'}</p>
+    <div class="role-reveal">
+      ${players.map(p => `
+        <div class="reveal-card" style="border-color: ${ROLE_COLOR[p.role]}40">
+          <div class="reveal-emoji">${ROLE_EMOJI[p.role]}</div>
+          <div class="reveal-name">${p.name}</div>
+          <div class="reveal-role" style="color:${ROLE_COLOR[p.role]}">${p.role} ${p.alive ? '(存活)' : '(死亡)'}</div>
+        </div>
+      `).join('')}
+    </div>
+    <br><br>
+    <button class="btn btn-primary" onclick="resetGame()">再來一局</button>
+  `;
+  main.appendChild(div);
+  scrollToBottom();
+
+  showRoles = true;
+  document.getElementById('role-toggle').classList.add('active');
+  document.getElementById('sidebar').classList.add('show-roles');
+}
+
+// ==============================
+// UI HELPERS
+// ==============================
+function renderSidebar() {
+  const list = document.getElementById('player-list');
+  list.innerHTML = '';
+  players.forEach(p => {
+    const card = document.createElement('div');
+    card.className = `player-card ${p.alive ? '' : 'dead'}`;
+    card.id = `card-${p.name}`;
+    card.innerHTML = `
+      <div class="player-avatar" style="background:${p.avatarBg}">${p.avatar}</div>
+      <div class="player-info">
+        <div class="player-name">${p.name}</div>
+        <div class="player-trait">${p.trait.substring(0, 15)}...</div>
+        <span class="player-role-badge role-${ROLE_CLASS[p.role]}">${ROLE_EMOJI[p.role]} ${p.role}</span>
+      </div>
+    `;
+    list.appendChild(card);
+  });
+}
+
+function setSpeaking(name) {
+  const card = document.getElementById(`card-${name}`);
+  if (card) card.classList.add('speaking');
+}
+
+function clearSpeaking() {
+  document.querySelectorAll('.player-card.speaking').forEach(c => c.classList.remove('speaking'));
+}
+
+function createChatBubble(player, text, index) {
+  const div = document.createElement('div');
+  div.className = 'chat-bubble';
+  div.style.animationDelay = `${index * 0.1}s`;
+
+  const speechClass = showRoles ? `${ROLE_CLASS[player.role]}-speech` : '';
+
+  div.innerHTML = `
+    <div class="chat-avatar" style="background:${player.avatarBg}">${player.avatar}</div>
+    <div class="chat-body">
+      <div class="chat-name">${player.name}</div>
+      <div class="chat-text ${speechClass}">${text}</div>
+    </div>
+  `;
+  return div;
+}
+
+function addLogEntry(container, icon, text) {
+  const entry = document.createElement('div');
+  entry.className = 'god-log-entry';
+  entry.innerHTML = `<span class="god-log-icon">${icon}</span><span>${text}</span>`;
+  container.appendChild(entry);
+}
+
+function updatePhaseBadge(phase) {
+  const badge = document.getElementById('phase-badge');
+  badge.className = `day-badge ${phase}`;
+  badge.textContent = `第 ${currentDay} 天 - ${phase === 'night' ? '夜晚' : '白天'}`;
+}
+
+function toggleRoles() {
+  showRoles = !showRoles;
+  document.getElementById('role-toggle').classList.toggle('active');
+  document.getElementById('sidebar').classList.toggle('show-roles');
+}
+
+function updateSpeed() {
+  gameSpeed = parseInt(document.getElementById('speed-select').value);
+}
+
+function createElement(tag, className) {
+  const el = document.createElement(tag);
+  el.className = className;
+  return el;
+}
+
+function getPlayer(name) {
+  return players.find(p => p.name === name);
+}
+
+function scrollToBottom() {
+  const main = document.getElementById('main-area');
+  main.scrollTop = main.scrollHeight;
+}
+
+function shuffleArray(arr) {
+  for (let i = arr.length - 1; i > 0; i--) {
+    const j = Math.floor(Math.random() * (i + 1));
+    [arr[i], arr[j]] = [arr[j], arr[i]];
+  }
+}
+
+function sleep(ms) {
+  return new Promise(resolve => setTimeout(resolve, ms));
+}
+
+function resetGame() {
+  gameRunning = false;
+  players = [];
+  roleMap = {};
+  alivePlayers = [];
+  deadPlayers = [];
+  currentDay = 0;
+  showRoles = false;
+  witchHealUsed = false;
+  witchPoisonUsed = false;
+  seerChecked = {};
+  chatHistory = [];
+  nightDeathLog = [];
+
+  document.getElementById('main-area').innerHTML = '';
+  document.getElementById('player-list').innerHTML = '';
+
+  const toggle = document.getElementById('role-toggle');
+  if (toggle) toggle.classList.remove('active');
+  const sidebar = document.getElementById('sidebar');
+  if (sidebar) sidebar.classList.remove('show-roles');
+
+  document.getElementById('game-screen').style.display = 'none';
+  document.getElementById('setup-screen').style.display = 'flex';
+}
+
+// Init
+initSetup();
+</script>
+</body>
+</html>
