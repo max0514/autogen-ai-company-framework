@@ -1,0 +1,200 @@
+# Value Investing AI Agent Framework: System Architecture & Design
+
+## 1. System Architecture & Core Modules
+
+### 1.1 Data Ingestion & Engineering Pipeline
+*   **Fundamental Data Sourcing & Cleaning:**
+    *   **Sources:** Access API endpoints (e.g., Financial Modeling Prep, Alpha Vantage, sec-api, or yfinance) for historical income statements, balance sheets, and cash flow statements.
+    *   **Cleaning:** Standardize accounting metrics (e.g., harmonizing EBIT, EBITDA, Free Cash Flow definitions across companies). Handle missing data by forward-filling or omitting incomplete fiscal years. Convert all absolute numbers to per-share metrics where applicable.
+*   **Unstructured Data Pipelines (RAG Approach):**
+    *   **Sources:** 10-K/10-Q filings, earnings call transcripts, management discussion and analysis (MD&A).
+    *   **Processing:**
+        *   Extract text using tools like `sec-api` and PDF parsers.
+        *   Chunk text into semantic sections (e.g., Risk Factors, Management Discussion).
+        *   Embed chunks using a financial domain-specific embedding model (e.g., FinBERT embeddings or OpenAI's `text-embedding-3-large`).
+        *   Store in a Vector Database (e.g., ChromaDB, Pinecone, or Qdrant).
+    *   **Retrieval:** When the agent evaluates a company, it queries the RAG system for specific qualitative aspects like "competitor threats," "management outlook," and "regulatory risks."
+
+### 1.2 The Value Investing AI Agent
+*   **Intrinsic Value Calculation:**
+    *   The agent utilizes a deterministic calculation engine for quantitative valuation to avoid LLM hallucination.
+    *   **Discounted Cash Flow (DCF):** Projects future free cash flows based on historical growth rates (adjusted by LLM qualitative sentiment) and discounts them back to present value using the Weighted Average Cost of Capital (WACC).
+    *   **Graham Number:** Calculates the maximum fair value based on Earnings Per Share (EPS) and Book Value Per Share (BVPS).
+*   **LLM Qualitative Assessment (Moat & Management):**
+    *   The LLM acts as the "Qualitative Analyst." It is prompted with summarized information retrieved from the RAG pipeline.
+    *   **Prompting Strategy:** Analyze for "Economic Moats" (network effects, switching costs, cost advantages), "Management Competence" (capital allocation history, CEO tenure), and "Competitive Advantage."
+*   **Decision-Making Guardrails (Margin of Safety):**
+    *   **Strict Rule:** `Buy Signal = True IF Current_Price < (Intrinsic_Value * (1 - Margin_of_Safety_Percentage))`
+    *   The default Margin of Safety is set to 30%. The LLM cannot override this rule; it can only influence the inputs to the Intrinsic Value calculation (e.g., conservatively lowering growth estimates if parsing negative sentiment from transcripts).
+
+### 1.3 The Backtesting Engine
+*   **Event-Driven Architecture:**
+    *   The engine steps through historical dates daily. It triggers the AI Agent only on specific events: Earnings releases, 10-K filings, or significant price drops (to check for value opportunities).
+*   **Addressing Quantitative Pitfalls:**
+    *   **Survivorship Bias:** Must use a historical stock universe dataset that includes delisted or bankrupt companies.
+    *   **Look-Ahead Bias:** Point-in-time data is critical. The system must only provide the agent with data that was publicly available *on that specific historical date*. Financial statements must be timestamped by their filing date, not the end of the fiscal quarter.
+    *   **Transaction Fees & Slippage:** Model realist market impact and broker commissions (e.g., 0.1% slippage per trade + $1 commission).
+*   **Execution Logic & Portfolio Sizing:**
+    *   **Rebalancing:** Quarterly or Annual rebalancing, aligning with the fundamental value investing ethos (low turnover).
+    *   **Sizing:** Conviction-based weighting (e.g., higher weight for stocks with a larger Margin of Safety and higher LLM qualitative scores) capped at a maximum position size (e.g., 5% to 10% per stock).
+
+### 1.4 Performance Analytics & Risk Management
+*   **Core Metrics:**
+    *   Compound Annual Growth Rate (CAGR)
+    *   Sharpe Ratio & Sortino Ratio (focusing on downside volatility)
+    *   Maximum Drawdown
+    *   Alpha & Beta (relative to a benchmark like the S&P 500)
+    *   Win/Loss Ratio & Average Holding Period
+*   **Risk Management Protocols:**
+    *   **Sector Limits:** Maximum 20-25% exposure to any single sector to ensure diversification.
+    *   **Max Position Size:** Strict cap of 5-10% of portfolio Net Asset Value (NAV) per equity.
+    *   **Stop-Loss:** While traditional value investors might average down, the system can implement a fundamental stop-loss (sell if the thesis is broken, indicated by a massive downgrade in intrinsic value).
+
+---
+
+## 2. Recommended Technology Stack
+
+*   **Language:** Python 3.10+
+*   **AI Agent Framework:**
+    *   **LangChain / LangGraph:** For orchestrating the RAG pipeline and complex agent reasoning chains.
+    *   **AutoGen:** (Optional) If employing a multi-agent setup (e.g., one agent is the "Quant Modeler", another is the "Risk Manager", and a final "Portfolio Manager" makes the call).
+*   **LLMs:**
+    *   OpenAI `gpt-4o` or Anthropic `claude-3-5-sonnet` for deep qualitative reasoning and reading transcripts.
+*   **Data Sourcing:**
+    *   **Prices:** `yfinance`, Alpaca, or Polygon.io.
+    *   **Fundamentals & SEC Filings:** `sec-api`, Financial Modeling Prep (FMP), or AlphaVantage.
+*   **Vector Database (RAG):**
+    *   `ChromaDB` (local/testing) or `Pinecone` (production).
+*   **Backtesting Engine:**
+    *   **Backtrader:** Highly customizable, event-driven, and robust for custom strategy logic.
+    *   **Zipline-Reloaded:** Excellent for institutional-grade point-in-time backtesting.
+*   **Data Processing & Analytics:**
+    *   `pandas`, `numpy`, `pyfolio` (for tearsheets and performance metrics).
+
+---
+
+## 3. High-Level Folder Structure
+
+```text
+value_investing_framework/
+│
+├── data/                       # Local raw and processed data storage
+│   ├── fundamental/            # Cleaned balance sheets, cash flows
+│   ├── market/                 # OHLCV price data
+│   └── unstructured/           # Downloaded 10-Ks, transcripts
+│
+├── ingestion/                  # Data pipelines
+│   ├── market_data.py          # Fetches from yfinance/Alpaca
+│   ├── sec_filings.py          # Uses sec-api to pull and parse text
+│   └── vector_store.py         # Embedding and ChromaDB logic
+│
+├── agent/                      # Core AI Agent logic
+│   ├── prompts/                # System prompts for value analysis
+│   ├── valuation_models.py     # Deterministic DCF, Graham Number math
+│   ├── llm_analyst.py          # RAG querying and qualitative analysis
+│   └── value_agent.py          # Main agent class (combines math & LLM)
+│
+├── backtest/                   # Backtesting infrastructure
+│   ├── engine.py               # Event-driven backtesting loop
+│   ├── point_in_time.py        # Logic to prevent look-ahead bias
+│   ├── execution.py            # Portfolio sizing and slippage models
+│   └── analytics.py            # CAGR, Sharpe, Drawdown calculations
+│
+├── config/                     # System configuration
+│   └── settings.yaml           # API keys, Margin of Safety %, Max Sector limits
+│
+├── main.py                     # Entry point for running backtests or testing logic
+└── requirements.txt            # Python dependencies
+```
+
+---
+
+## 4. Sample Python Class Structure
+
+```python
+import pandas as pd
+from typing import Dict, Any
+
+class ValueInvestingAgent:
+    def __init__(self, llm_client, vector_db, margin_of_safety: float = 0.30):
+        """
+        Initializes the Value Agent with an LLM client, access to the RAG database,
+        and a strict Margin of Safety threshold.
+        """
+        self.llm = llm_client
+        self.rag_db = vector_db
+        self.margin_of_safety = margin_of_safety
+
+    def calculate_intrinsic_value(self, financials: pd.DataFrame) -> float:
+        """
+        Deterministic calculation of Intrinsic Value.
+        Uses DCF or Graham Number based on historical fundamental data.
+        """
+        # Example using simple Graham Number calculation: sqrt(22.5 * EPS * BVPS)
+        eps = financials['eps'].iloc[-1]
+        bvps = financials['book_value_per_share'].iloc[-1]
+        
+        if eps > 0 and bvps > 0:
+            graham_number = (22.5 * eps * bvps) ** 0.5
+            return graham_number
+        return 0.0
+
+    def assess_qualitative_moat(self, ticker: str, date: str) -> Dict[str, Any]:
+        """
+        Uses RAG to fetch recent text data and queries the LLM for qualitative metrics.
+        """
+        # 1. Retrieve relevant historical context from Vector DB (avoiding look-ahead bias)
+        context = self.rag_db.query(
+            filter={"ticker": ticker, "date_lte": date},
+            query_texts=["management competence", "competitive moat", "risk factors"]
+        )
+
+        # 2. Prompt LLM to analyze the context
+        prompt = f"""
+        You are a Value Investing Analyst. Based on the following SEC filings and transcripts:
+        {context}
+        Assess the company's economic moat and management quality. 
+        Return a JSON with 'moat_score' (1-10), 'management_score' (1-10), and 'thesis_summary'.
+        """
+        
+        response = self.llm.invoke(prompt)
+        return response.json() # Returns dict containing scores and thesis
+
+    def generate_signal(self, ticker: str, current_price: float, financials: pd.DataFrame, date: str) -> Dict[str, Any]:
+        """
+        Main decision-making function. Combines quantitative valuation with 
+        qualitative LLM assessment and enforces the Margin of Safety.
+        """
+        # 1. Quantitative Valuation
+        intrinsic_value = self.calculate_intrinsic_value(financials)
+        
+        if intrinsic_value == 0:
+            return {"action": "HOLD", "reason": "Negative earnings or book value prevents valuation."}
+
+        # 2. Guardrail Check: Margin of Safety
+        target_buy_price = intrinsic_value * (1 - self.margin_of_safety)
+        
+        if current_price > target_buy_price:
+            return {
+                "action": "HOLD", 
+                "reason": f"Price ${current_price:.2f} is above target buy price ${target_buy_price:.2f}."
+            }
+
+        # 3. Qualitative Verification (Run only if price is attractive)
+        qual_analysis = self.assess_qualitative_moat(ticker, date)
+        
+        if qual_analysis['moat_score'] < 6 or qual_analysis['management_score'] < 6:
+            return {
+                "action": "HOLD", 
+                "reason": "Value trap detected. Weak qualitative fundamentals despite low price."
+            }
+
+        # 4. Final Buy Signal
+        return {
+            "action": "BUY",
+            "confidence": (target_buy_price - current_price) / target_buy_price,
+            "intrinsic_value": intrinsic_value,
+            "target_buy_price": target_buy_price,
+            "analysis": qual_analysis['thesis_summary']
+        }
+```

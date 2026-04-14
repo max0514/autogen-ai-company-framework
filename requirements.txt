@@ -1,0 +1,5 @@
+pyautogen==0.2.27
+ag2[gemini]
+google-genai
+vertexai
+jsonschema
